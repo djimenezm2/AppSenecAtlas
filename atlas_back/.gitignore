@@ -1,0 +1,99 @@
+# Compiled Python files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+.Python
+
+# Secret key
+*.secret_key
+
+# Database
+*.sqlite3
+*.db
+
+# Local settings
+local_settings.py
+
+# Media and static files (upload folder, compiled assets, etc.)
+#media/
+#staticfiles/
+#uploads/
+#docs/
+#scripts/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Temporary files
+.temp/
+
+# Cache
+__pycache__/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Compiled files
+*.min.js
+*.min.css
+
+# Testing and coverage
+.coverage/
+.coverage.*
+*.py[cod]
+__pycache__/
+htmlcov/
+.coverage_html/
+
+# Compiled Python files
+*.pyc
+
+# Django migrations
+*.py[co]
+__pycache__/
+*.egg-info/
+*.egg
+*.mo
+*.pot
+*/migrations/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Debugging and profiling
+*.pydevproject
+*.pydevworkspace
+
+# Ignore all .env files except for .env.example
+!.env.example
+*.env
+
+# Type checking
+.pyre/
+
+# Local data
+*.local/
+
+# Django secret files
+django_admin_secret_key
+
+# Celery Beat schedule file
+celerybeat-schedule
+
+# Django debug toolbar
+debug_toolbar/

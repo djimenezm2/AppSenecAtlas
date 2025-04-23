@@ -3,6 +3,8 @@
 import os
 import sys
 
+os.environ['GDAL_LIBRARY_PATH'] = r'C:\OSGeo4W\bin\gdal310.dll'
+
 
 def main():
     """Run administrative tasks."""

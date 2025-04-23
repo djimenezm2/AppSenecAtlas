@@ -4,7 +4,8 @@ import LayersIcon from "@mui/icons-material/Layers";
 import strings from "../strings/es.json";
 
 // Produccion
-export const backendURL = "https://senecatlasback.virtual.uniandes.edu.co";
+//export const backendURL = "https://senecatlasback.virtual.uniandes.edu.co";
+export const backendURL = "http://localhost:8081";
 
 // Desarrollo
 //export const backendURL = "http://localhost:8081";

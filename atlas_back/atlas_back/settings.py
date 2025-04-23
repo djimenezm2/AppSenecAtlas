@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+# Set the GDAL_LIBRARY_PATH environment variable to the path of the GDAL library
+os.environ['GDAL_LIBRARY_PATH'] = r"C:\OSGeo4W\bin\gdal310.dll"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'

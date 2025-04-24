@@ -27,7 +27,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', '') != 'False'
+DEBUG = os.environ["DEBUG"]
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -36,12 +36,14 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '172.24.98.40',
 ]
+
 # Allow requests from the front end
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8090",
     'https://127.0.0.1:8081',
     "https://senecatlas.virtual.uniandes.edu.co",
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8090',
     'https://*.127.0.0.1',
@@ -107,11 +109,11 @@ WSGI_APPLICATION = 'atlas_back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'Atlas',
-        'USER': 'proyecto',
-        'PASSWORD': 'integral',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
     }
 }
 
@@ -139,11 +141,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 

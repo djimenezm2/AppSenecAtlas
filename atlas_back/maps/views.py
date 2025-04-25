@@ -8,14 +8,19 @@ from django.core.files.storage import default_storage
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
+from django.contrib.gis import gdal
 
-import json
 import magic
 import subprocess
-import uuid
-import os
 from . import models
 from . import serializers
+
+import time
+from django.contrib.gis.geos import GEOSGeometry
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from . import models
 
 
 class IndicatorsViewset(viewsets.ModelViewSet):
@@ -251,18 +256,51 @@ class OriginalPixelsViewset(viewsets.ModelViewSet):
             - Conjunto de píxeles filtrados.
 
         """
-        queryset = models.OriginalPixels.objects.all()
-        # Filtro por indicador
-        indicator_id_request = request.data.get("indicator_id", None)
-        if indicator_id_request is not None:
-            queryset = queryset.filter(indicator_id=indicator_id_request)
-        # Filtro por área
-        in_request = request.data.get("in", None)
-        if in_request:
-            area_geometry = GEOSGeometry(in_request)
-            queryset = queryset.filter(location__within=area_geometry)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+
+        start = time.time()
+
+        qs = models.OriginalPixels.objects.all()
+
+        # 1) Filtrar por indicador
+        indicator_id = request.data.get("indicator_id")
+        if indicator_id is not None:
+            qs = qs.filter(indicator_id=indicator_id)
+
+        # 2) Filtrar por área: bbox rápido + within exacto
+        geojson_in = request.data.get("in")
+        if geojson_in:
+            area = GEOSGeometry(geojson_in)
+            # bounding-box overlap (usa índice GiST)
+            qs = qs.filter(location__bboverlaps=area.envelope)
+            # filtro exacto dentro del polígono
+            qs = qs.filter(location__within=area)
+
+        # 3) Solo traer campos necesarios
+        qs = qs.values("location", "value")
+
+        # 4) Montar FeatureCollection manualmente
+        features = []
+        for row in qs:
+            pt = row["location"]
+            val = row["value"]
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [pt.x, pt.y],
+                },
+                "properties": {"value": val},
+            })
+
+        geojson = {
+            "type": "FeatureCollection",
+            "features": features,
+        }
+
+        elapsed = time.time() - start
+        print(f"[OriginalPixelsViewset.draw] demoró {elapsed:.2f} s")
+
+        return Response(geojson, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"])
     def add_layer(self, request):
@@ -312,7 +350,6 @@ class OriginalPixelsViewset(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
 class FileUploadViewSet(viewsets.ViewSet):
     """

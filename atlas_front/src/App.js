@@ -8,10 +8,10 @@ export default function App() {
 
   return (
     <Routes>
-      <Route exact path="/" element={<IntegralMain />} />
-      <Route path="biomass" element={<BiomassMain />} />
-      <Route path="solar" element={<SolarMain />} />
-      <Route path="integral" element={<IntegralMain />} />
+      <Route exact path="/senecatlas/" element={<IntegralMain />} />
+      <Route path="/senecatlas/biomass" element={<BiomassMain />} />
+      <Route path="/senecatlas/solar" element={<SolarMain />} />
+      <Route path="/senecatlas/integral" element={<IntegralMain />} />
     </Routes>
   );
 }

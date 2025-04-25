@@ -33,7 +33,7 @@ export const mapsMetadata = {
     initialLat: 9.93,
     initialLng: -73.3,
     initialZoom: 11,
-    minZoom: 8,
+    minZoom: 9,
     maxZoom: 18,
     apiCallDelay: 400,
   },
@@ -67,10 +67,23 @@ export const hours = Object.fromEntries(
 );
 
 export const navActions = [
-  { icon: <GrassIcon />, name: strings.biomassAtlas, link: "/biomass" },
-  { icon: <WbSunnyIcon />, name: strings.solarAtlas, link: "/solar" },
-  { icon: <LayersIcon />, name: strings.integral, link: "/integral" },
+  {
+    icon: <GrassIcon sx={{ position: 'relative', top: '2px' }} />,
+    name: strings.biomassAtlas,
+    link: "/senecatlas/biomass"
+  },
+  {
+    icon: <WbSunnyIcon sx={{ position: 'relative', top: '5px' }} />,
+    name: strings.solarAtlas,
+    link: "/senecatlas/solar"
+  },
+  {
+    icon: <LayersIcon sx={{ position: 'relative', top: '4px' }} />,
+    name: strings.integral,
+    link: "/senecatlas/integral"
+  },
 ];
+
 
 export const months = (config) => {
   var cfg = config || {};

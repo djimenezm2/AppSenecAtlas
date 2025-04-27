@@ -1,12 +1,13 @@
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.contrib.gis.geos import Point
 from rest_framework_gis.filters import InBBoxFilter
 from django.contrib.gis.geos import GEOSGeometry
-
 from . import models
 from . import serializers
+import time
 
 class HistDayViewset(viewsets.ModelViewSet):
     """
@@ -27,7 +28,7 @@ class HistDayViewset(viewsets.ModelViewSet):
             - point (str): Coordenadas geográficas en formato "latitud,longitud".
             - year (int): Año.
             - day (int): Día del año.
-        
+
         Returns:
             - Conjunto de datos históricos por día filtrados.
 
@@ -48,7 +49,7 @@ class HistDayViewset(viewsets.ModelViewSet):
         if day_request:
             queryset = queryset.filter(day=day_request).order_by('day').values()
         return queryset
-        
+
 class HistHourViewset(viewsets.ModelViewSet):
     """
     Vista para el modelo HistHour.
@@ -81,7 +82,7 @@ class HistHourViewset(viewsets.ModelViewSet):
         # Filtro por hora
         hour_request = self.request.query_params.get('hour', None)
 
-        if point_request: 
+        if point_request:
             latitude, longitude = map(float, point_request.split(','))
             queryset = queryset.filter(location=Point(latitude, longitude))
         if year_request:
@@ -166,7 +167,7 @@ class HistYearViewset(viewsets.ModelViewSet):
         if year_request:
             queryset = queryset.filter(year=year_request)
         return queryset
-        
+
 class HistYearPixelsViewset(viewsets.ModelViewSet):
     """
     Vista para el modelo HistYear con representación geoespacial.
@@ -179,7 +180,7 @@ class HistYearPixelsViewset(viewsets.ModelViewSet):
     queryset = models.HistYear.objects.all()
     serializer_class = serializers.HistYearPixelsSerializer
     filter_backends = (InBBoxFilter,)
-    
+
     @action(detail=False, methods=["post"])
     def draw(self, request):
         """
@@ -191,20 +192,50 @@ class HistYearPixelsViewset(viewsets.ModelViewSet):
 
         Returns:
             - Conjunto de datos históricos anuales filtrados, en formato GeoJSON.
-
         """
-        queryset = self.queryset
-        # Filtro por anio
-        year_request = request.data.get("year", None)
+
+        start = time.time()
+
+        qs = models.HistYear.objects.all()
+
+        # 1) Filtrar por año
+        year_request = request.data.get("year")
         if year_request is not None:
-            queryset = queryset.filter(year=year_request)
-        # Filtro por área
-        in_request = request.data.get("in", None)
+            qs = qs.filter(year=year_request)
+
+        # 2) Filtrar por área: bbox rápido + within exacto
+        in_request = request.data.get("in")
         if in_request:
             area_geometry = GEOSGeometry(in_request)
-            queryset = queryset.filter(location__within=area_geometry)
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+            qs = qs.filter(location__bboverlaps=area_geometry.envelope)
+            qs = qs.filter(location__within=area_geometry)
+
+        # 3) Solo traer campos necesarios
+        qs = qs.values("location", "ghi")
+
+        # 4) Montar FeatureCollection manualmente
+        features = []
+        for row in qs:
+            pt = row["location"]
+            ghi = row["ghi"]
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [pt.x, pt.y],
+                },
+                "properties": {"ghi": ghi},
+            })
+
+        geojson = {
+            "type": "FeatureCollection",
+            "features": features,
+        }
+
+        elapsed = time.time() - start
+        print(f"[HistYearPixelsViewset.draw] demoró {elapsed:.2f} s")
+
+        return Response(geojson, status=status.HTTP_200_OK)
 
 class ElevationViewset(viewsets.ModelViewSet):
     """
@@ -236,7 +267,7 @@ class ElevationViewset(viewsets.ModelViewSet):
             latitude, longitude = map(float, point_request.split(','))
             queryset = queryset.filter(location=Point(latitude, longitude)).order_by('year').values()
         return queryset
-        
+
 class LimitsViewset(viewsets.ModelViewSet):
     """
     Vista para el modelo Limits.

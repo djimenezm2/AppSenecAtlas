@@ -1,7 +1,9 @@
+// Start page for the integral component
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 import { Box, Grid, ThemeProvider } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import LayersIcon from "@mui/icons-material/Layers";
@@ -12,6 +14,39 @@ import { getMetadata } from "../services/mapsAPI";
 import { integralTheme } from "../themes/themes";
 import constants from "../utils/constants";
 
+// Define styles for SpeedDial tooltips
+const useStyles = makeStyles({
+  staticTooltipLabel: {
+    whiteSpace: "nowrap",
+    maxWidth: "none",
+  },
+});
+
+// SpeedDial component for navigation between sections
+const SpeedDialWithStyles = () => {
+  const classes = useStyles();
+
+  return (
+    <SpeedDial
+      ariaLabel="dialNav"
+      sx={{ position: "absolute", top: 16, right: 16 }}
+      icon={<LayersIcon />}
+      direction="down"
+    >
+      {constants.navActions.map((action) => (
+        <SpeedDialAction
+          key={action.name}
+          icon={<Link to={action.link}>{action.icon}</Link>}
+          tooltipTitle={action.name}
+          tooltipOpen
+          classes={{ staticTooltipLabel: classes.staticTooltipLabel }}
+          />
+        ))}
+    </SpeedDial>
+  );
+};
+
+// Main page component for the Integral section
 class IntegralMain extends Component {
   constructor(props) {
     super(props);
@@ -24,10 +59,12 @@ class IntegralMain extends Component {
     };
   }
 
-  handleNavClick = () => {
-    this.props.history.push("/integral");
-  };
+  // Set document title when component mounts
+  componentDidMount() {
+    document.title = "SenecAtlas - Integral";
+  }
 
+  // Handle changes when a tessela is selected
   handleSelectedChange = (coordinates, value) => {
     this.setState({
       selected: {
@@ -37,6 +74,7 @@ class IntegralMain extends Component {
     });
   };
 
+  // Handle indicator change and load metadata
   handleIndicatorChange = (newIndicator) => {
     const newIndicatorId = newIndicator["id"];
     getMetadata(newIndicatorId).then((metadata) => {
@@ -49,10 +87,12 @@ class IntegralMain extends Component {
     });
   };
 
+  // Handle WKT polygon changes
   handleWKTPolygonChange = (newWKTPolygon) => {
     this.setState({ wktPolygon: newWKTPolygon });
   };
 
+  // Render the component
   render() {
     return (
       <ThemeProvider theme={integralTheme}>
@@ -69,6 +109,7 @@ class IntegralMain extends Component {
             columns={7}
           >
             <Grid item xs={7} md={2}>
+              {/* Sidebar: IntegralContent component */}
               <IntegralContent
                 indicatorId={this.state.indicatorId}
                 onViewLayerClick={this.handleIndicatorChange}
@@ -78,6 +119,7 @@ class IntegralMain extends Component {
               />
             </Grid>
             <Grid item xs={7} md={5}>
+              {/* Main Map: IntegralMap component */}
               <IntegralMap
                 indicatorId={this.state.indicatorId}
                 indicatorMin={
@@ -99,21 +141,8 @@ class IntegralMain extends Component {
               />
             </Grid>
           </Grid>
-          <SpeedDial
-            ariaLabel="dialNav"
-            sx={{ position: "absolute", top: 16, right: 16 }}
-            icon={<LayersIcon />}
-            direction="down"
-          >
-            {constants.navActions.map((action) => (
-              <SpeedDialAction
-                key={action.name}
-                icon={<Link to={action.link}>{action.icon}</Link>}
-                tooltipTitle={action.name}
-                tooltipOpen
-              />
-            ))}
-          </SpeedDial>
+          {/* SpeedDial navigation */}
+          <SpeedDialWithStyles />
         </Box>
       </ThemeProvider>
     );

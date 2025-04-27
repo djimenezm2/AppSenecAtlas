@@ -1,5 +1,6 @@
-import React, { Component } from "react";
+// src/components/integral/integralMap.jsx
 
+import React, { Component } from "react";
 import { Box, LinearProgress } from "@mui/material";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -7,13 +8,12 @@ import "leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
 import { geojsonToWKT } from "@terraformer/wkt";
 
-import { booleanPointInPolygon, difference, point } from "@turf/turf";
-
 import MapLegend from "../content/mapLegend";
 import { getOriginalPixels, getPixels } from "../../services/mapsAPI";
-import { boundsToPolygon, getRadius, getColor } from "../../utils/functions";
+import { boundsToPolygon, getColor, getRadius } from "../../utils/functions";
 import { mapsMetadata } from "../../utils/constants";
 
+// Configure Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -21,261 +21,38 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-const createRectangle = (
-  center,
-  pixelSize,
-  fillColor,
-  fillOpacity,
-  value,
-  markerCallback
-) => {
-  const latlng = L.latLng(center);
-  const latLngWidth = pixelSize;
-  const bounds = L.latLngBounds(
-    L.latLng(latlng.lat - latLngWidth / 2, latlng.lng - latLngWidth / 2),
-    L.latLng(latlng.lat + latLngWidth / 2, latlng.lng + latLngWidth / 2)
-  );
-  let options = {
-    fillColor,
-    fillOpacity,
-    stroke: false,
-    value,
-  };
-  const rect = L.rectangle(bounds, options).on("click", markerCallback);
-  rect.getLatLng = () => {
-    return latlng;
-  };
-  return rect;
-};
-
+// Map component for the Integral page
 class IntegralMap extends Component {
   constructor(props) {
     super(props);
-    this.mapContainer = React.createRef();
+    this.state = { loading: false, bounds: null };
     this.map = null;
-    this.marker = null;
-    this.layer = null;
+    this.tileLayer = null;
+    this.canvasRenderer = null;
+    this.geojsonLayer = null;
     this.drawnItems = null;
-    this.state = {
-      loading: false,
-      polygon: null,
-      bounds: null,
-      markers: [],
-      timeout: null,
-    };
+    this._moveTimeout = null;
+    this.polygon = null;
   }
 
-  updateDrawLayer = (event) => {
-    this.props.onWKTPolygonChange(
-      geojsonToWKT(this.drawnItems.toGeoJSON().features[0].geometry)
-    );
-    this.setState({
-      polygon: event.layer,
-    });
-  };
-
-  handlePolygonDraw = (event) => {
-    if (this.state.polygon) {
-      this.drawnItems.removeLayer(this.state.polygon);
-    }
-    this.drawnItems.addLayer(event.layer);
-    this.drawnItems.bringToFront();
-    this.updateDrawLayer(event);
-  };
-
-  handlePolygonDelete = () => {
-    this.props.onWKTPolygonChange(null);
-    this.setState({
-      polygon: null,
-    });
-  };
-
-  handlePolygonUpdate = (event) => {
-    this.updateDrawLayer(event);
-  };
-
-  handleMarkerClick = (event) => {
-    const feature = event.target;
-    const { lat, lng } = feature.getLatLng();
-    const coord = [lat, lng];
-    this.props.onSelectedChange([lng, lat], feature.options.value);
-    if (this.marker) {
-      this.map.removeLayer(this.marker);
-    }
-    this.marker = L.marker(coord).addTo(this.map);
-  };
-
-  handleMapMove = () => {
-    const newBounds = this.map.getBounds();
-    const boundsPolygon = boundsToPolygon(newBounds);
-    this.removeMarkersOutOfBounds(boundsPolygon);
-    if (this.state.timeout) {
-      clearTimeout(this.state.timeout);
-    }
-    const timer = setTimeout(() => {
-      this.updateMap(boundsPolygon);
-      this.setState({
-        bounds: boundsPolygon,
-        timeout: null,
-      });
-    }, mapsMetadata.integral.apiCallDelay);
-    this.setState({
-      timeout: timer,
-    });
-  };
-
-  removeMarkersOutOfBounds = (bounds) => {
-    const filteredMarkers = this.state.markers.filter((marker) => {
-      const { lat, lng } = marker.getLatLng();
-      const pointInBounds = booleanPointInPolygon(point([lng, lat]), bounds);
-      if (!pointInBounds) this.layer.removeLayer(marker);
-      return pointInBounds;
-    });
-    this.setState({
-      markers: filteredMarkers,
-    });
-  };
-
-  filterMarkers = (geojsonResponse) => {
-    const { bounds } = this.state;
-    const markerClickCallback = this.handleMarkerClick;
-    let currentMarkers = this.state.markers;
-    const minValue = this.props.indicatorMin;
-    const maxValue = this.props.indicatorMax;
-    const palette = this.props.indicatorPalette;
-    const pixelSize = this.props.indicatorPixelSize;
-    geojsonResponse.features.forEach((point) => {
-      const latlng = L.latLng(
-        point.geometry.coordinates[1],
-        point.geometry.coordinates[0]
-      );
-      const fillColor = getColor(
-        point.properties.value,
-        minValue,
-        maxValue,
-        palette
-      );
-      const newMarker =
-        pixelSize !== null
-          ? createRectangle(
-              latlng,
-              pixelSize,
-              fillColor,
-              0.7,
-              point.properties.value,
-              markerClickCallback
-            )
-          : L.circleMarker(latlng, {
-              autoPan: false,
-              radius: getRadius(this.map.getZoom()),
-              fillColor: fillColor,
-              weight: 0,
-              opacity: 0,
-              fillOpacity: 0.7,
-              value: point.properties.value,
-            }).on("click", markerClickCallback);
-      if (!currentMarkers.includes(newMarker)) {
-        currentMarkers.push(newMarker);
-      }
-    });
-    const filteredMarkers = currentMarkers.filter((marker) => {
-      const { lat, lng } = marker.getLatLng();
-      const pointInBounds = booleanPointInPolygon(point([lng, lat]), bounds);
-      if (!pointInBounds) this.layer.removeLayer(marker);
-      return pointInBounds;
-    });
-    return filteredMarkers;
-  };
-
-  updateMap = async (newBounds, indicatorChange) => {
-    this.setState({
-      loading: true,
-    });
-    const { indicatorId } = this.props;
-    const { bounds, markers } = this.state;
-    let renderBounds = boundsToPolygon(this.map.getBounds());
-
-    if (newBounds && bounds && !indicatorChange) {
-      renderBounds = difference(newBounds, bounds);
-    }
-
-    if (renderBounds) {
-      try {
-        if (indicatorId > 14) {
-          const geojsonResponse = await getPixels(
-            indicatorId,
-            renderBounds.geometry
-          );
-          const filteredMarkers = this.filterMarkers(geojsonResponse);
-          this.layer = L.layerGroup(filteredMarkers).addTo(this.map);
-          this.drawnItems.bringToFront();
-          this.setState({
-            markers: filteredMarkers,
-          });
-        } else {
-          const geojsonResponse = await getOriginalPixels(
-            indicatorId,
-            renderBounds.geometry
-          );
-          const filteredMarkers = this.filterMarkers(geojsonResponse);
-          this.layer = L.layerGroup(filteredMarkers).addTo(this.map);
-          this.drawnItems.bringToFront();
-          this.setState({
-            markers: filteredMarkers,
-          });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      this.layer = L.layerGroup(markers).addTo(this.map);
-    }
-    this.setState({
-      loading: false,
-    });
-  };
-
-  initializeMap = () => {
-    this.map = L.map("integralmap", { preferCanvas: true }).setView(
-      [mapsMetadata.integral.initialLat, mapsMetadata.integral.initialLng],
-      mapsMetadata.integral.initialZoom
-    );
-    L.tileLayer("http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
-      minZoom: mapsMetadata.integral.minZoom,
-      maxZoom: mapsMetadata.integral.maxZoom,
-      attribution: "©Google",
-      subdomains: ["mt0", "mt1", "mt2", "mt3"],
-    }).addTo(this.map);
-
-    this.drawnItems = new L.FeatureGroup();
-    this.map.addLayer(this.drawnItems);
-    this.map.addControl(
-      new L.Control.Draw({
-        draw: {
-          polygon: true,
-          marker: false,
-          circle: false,
-          circlemarker: false,
-          polyline: false,
-        },
-        edit: {
-          featureGroup: this.drawnItems,
-        },
-      })
-    );
+  // Returns a padded polygon around the current map bounds
+  getPaddedPolygon = () => {
+    const bounds = this.map.getBounds();
+    const size = this.props.indicatorPixelSize;
+    const n = 2; // extra tesselas
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    const paddedSW = L.latLng(sw.lat - n * size, sw.lng - n * size);
+    const paddedNE = L.latLng(ne.lat + n * size, ne.lng + n * size);
+    return boundsToPolygon(L.latLngBounds(paddedSW, paddedNE));
   };
 
   componentDidMount() {
     this.initializeMap();
-    const initialBounds = boundsToPolygon(this.map.getBounds());
-    this.updateMap(initialBounds);
-    this.setState({
-      bounds: initialBounds,
-    });
+    const initialPoly = this.getPaddedPolygon();
+    this.updateMap(initialPoly);
+    this.setState({ bounds: initialPoly });
     this.map.on("moveend", this.handleMapMove);
-    this.map.on("draw:created", this.handlePolygonDraw);
-    this.map.on("draw:edited", this.handlePolygonUpdate);
-    this.map.on("draw:deleted", this.handlePolygonDelete);
   }
 
   componentDidUpdate(prevProps) {
@@ -283,33 +60,180 @@ class IntegralMap extends Component {
       prevProps.indicatorId !== this.props.indicatorId &&
       this.props.indicatorId !== -1
     ) {
-      if (this.marker) {
-        this.map.removeLayer(this.marker);
-      }
-      this.setState({ markers: [] });
-      this.map.removeLayer(this.layer);
       this.updateMap(this.state.bounds, true);
     }
   }
 
   componentWillUnmount() {
-    clearTimeout(this.state.timeout);
-    if (this.map) {
-      this.map.remove();
-    }
+    this.map.off("moveend", this.handleMapMove);
+    this.map.off("draw:created", this.handlePolygonDraw);
+    this.map.off("draw:edited", this.handlePolygonUpdate);
+    this.map.off("draw:deleted", this.handlePolygonDelete);
+    this.map.remove();
+    if (this._moveTimeout) clearTimeout(this._moveTimeout);
   }
+
+  // Handle map move and refresh data
+  handleMapMove = () => {
+    if (this._moveTimeout) clearTimeout(this._moveTimeout);
+    this._moveTimeout = setTimeout(() => {
+      const paddedPoly = this.getPaddedPolygon();
+      this.updateMap(paddedPoly);
+      this.setState({ bounds: paddedPoly });
+    }, mapsMetadata.integral.apiCallDelay);
+  };
+
+  // Handle polygon draw event
+  handlePolygonDraw = (e) => {
+    if (this.polygon) this.drawnItems.removeLayer(this.polygon);
+    this.polygon = e.layer;
+    this.drawnItems.addLayer(this.polygon);
+    this.drawnItems.bringToFront();
+    this.props.onWKTPolygonChange(
+      geojsonToWKT(this.drawnItems.toGeoJSON().features[0].geometry)
+    );
+  };
+
+  // Handle polygon edit event
+  handlePolygonUpdate = () => {
+    this.props.onWKTPolygonChange(
+      geojsonToWKT(this.drawnItems.toGeoJSON().features[0].geometry)
+    );
+  };
+
+  // Handle polygon delete event
+  handlePolygonDelete = () => {
+    this.drawnItems.clearLayers();
+    this.polygon = null;
+    this.props.onWKTPolygonChange(null);
+  };
+
+  // Initialize the Leaflet map
+  initializeMap = () => {
+    this.map = L.map("integralmap", { preferCanvas: true, zoomControl: false }).setView(
+      [
+        mapsMetadata.integral.initialLat,
+        mapsMetadata.integral.initialLng,
+      ],
+      mapsMetadata.integral.initialZoom
+    );
+
+    L.control.zoom({ position: "bottomright" }).addTo(this.map);
+
+    this.tileLayer = L.tileLayer(
+      mapsMetadata.integral.tileUrl ||
+        "https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+      {
+        minZoom: mapsMetadata.integral.minZoom,
+        maxZoom: mapsMetadata.integral.maxZoom,
+        maxNativeZoom: 20,
+        attribution: "©Google",
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+        keepBuffer: 4,
+        crossOrigin: true,
+      }
+    ).addTo(this.map);
+
+    this.canvasRenderer = L.canvas({ padding: 2 });
+
+    this.geojsonLayer = L.geoJSON(null, {
+      renderer: this.canvasRenderer,
+      pointToLayer: (feature, latlng) => {
+        const val = feature.properties.value;
+        const col = getColor(
+          val,
+          this.props.indicatorMin,
+          this.props.indicatorMax,
+          this.props.indicatorPalette
+        );
+        const size = this.props.indicatorPixelSize;
+        if (size) {
+          const h = size / 2;
+          const pts = [
+            [latlng.lat - h, latlng.lng - h],
+            [latlng.lat - h, latlng.lng + h],
+            [latlng.lat + h, latlng.lng + h],
+            [latlng.lat + h, latlng.lng - h],
+          ];
+          return L.polygon(pts, {
+            renderer: this.canvasRenderer,
+            fillColor: col,
+            weight: 0,
+            fillOpacity: 0.7,
+          }).on("click", () => {
+            console.log("Sending to parent:", [latlng.lng, latlng.lat], val);
+            this.props.onSelectedChange([latlng.lng, latlng.lat], val);
+          });
+        }
+        return L.circleMarker(latlng, {
+          renderer: this.canvasRenderer,
+          radius: getRadius(this.map.getZoom()),
+          fillColor: col,
+          weight: 0,
+          fillOpacity: 0.7,
+        }).on("click", () => {
+          console.log("Sending to parent:", [latlng.lng, latlng.lat], val);
+          this.props.onSelectedChange([latlng.lng, latlng.lat], val);
+        });
+      },
+    }).addTo(this.map);
+
+    this.drawnItems = new L.FeatureGroup();
+    this.map.addLayer(this.drawnItems);
+
+    // Add Leaflet Draw controls
+    this.map.addControl(
+      new L.Control.Draw({
+        draw: {
+          polygon: true,
+          marker: false,
+          polyline: false,
+          circle: false,
+          circlemarker: false,
+        },
+        edit: { featureGroup: this.drawnItems },
+      })
+    );
+
+    // Listen to draw events
+    this.map.on("draw:created", this.handlePolygonDraw);
+    this.map.on("draw:edited", this.handlePolygonUpdate);
+    this.map.on("draw:deleted", this.handlePolygonDelete);
+  };
+
+  // Update the map data
+  updateMap = async (bounds, force) => {
+    this.setState({ loading: true });
+    const id = this.props.indicatorId;
+    try {
+      const data =
+        id > 14
+          ? await getPixels(id, bounds.geometry)
+          : await getOriginalPixels(id, bounds.geometry);
+      this.geojsonLayer.clearLayers();
+      this.geojsonLayer.addData(data);
+    } catch (e) {
+      console.error(e);
+    }
+    this.drawnItems.bringToFront();
+    this.setState({ loading: false });
+  };
 
   render() {
     return (
       <Box
         display="flex"
         flexDirection="column"
-        height={["40vh", "40vh", "100vh", "100vh", "100vh"]}
-        overflow="hidden"
+        height={["40vh", "40vh", "100vh"]}
         sx={{ position: "relative" }}
       >
-        {this.state.loading ? <LinearProgress sx={{ width: "100%" }} /> : null}
-        <Box id="integralmap" sx={{ flex: 1, overflow: "hidden" }}></Box>
+        {/* Loading bar */}
+        {this.state.loading && <LinearProgress sx={{ width: "100%" }} />}
+
+        {/* Map container */}
+        <Box id="integralmap" sx={{ flex: 1, overflow: "hidden" }} />
+
+        {/* Legend */}
         {this.props.indicatorMin !== null &&
           this.props.indicatorMax !== null &&
           this.props.indicatorPalette !== null && (
@@ -318,7 +242,7 @@ class IntegralMap extends Component {
               maxValue={this.props.indicatorMax}
               colors={this.props.indicatorPalette}
             />
-          )}
+        )}
       </Box>
     );
   }

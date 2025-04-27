@@ -1,7 +1,9 @@
+// Biomass main page component
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 import { Box, Grid, ThemeProvider } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import GrassIcon from "@mui/icons-material/Grass";
@@ -13,6 +15,39 @@ import { biomassTheme } from "../themes/themes";
 import constants from "../utils/constants";
 import { cropIndicatorMapping } from "../utils/biomassConstants";
 
+// Styles for SpeedDial tooltips
+const useStyles = makeStyles({
+  staticTooltipLabel: {
+    whiteSpace: "nowrap",
+    maxWidth: "none",
+  },
+});
+
+// SpeedDial component for navigation between sections
+const SpeedDialWithStyles = () => {
+  const classes = useStyles();
+
+  return (
+    <SpeedDial
+      ariaLabel="dialNav"
+      sx={{ position: "absolute", top: 16, right: 16 }}
+      icon={<GrassIcon />}
+      direction="down"
+    >
+      {constants.navActions.map((action) => (
+        <SpeedDialAction
+          key={action.name}
+          icon={<Link to={action.link}>{action.icon}</Link>}
+          tooltipTitle={action.name}
+          tooltipOpen
+          classes={{ staticTooltipLabel: classes.staticTooltipLabel }}
+        />
+      ))}
+    </SpeedDial>
+  );
+};
+
+// Main component for the Biomass section
 class BiomassMain extends Component {
   constructor(props) {
     super(props);
@@ -28,10 +63,7 @@ class BiomassMain extends Component {
     };
   }
 
-  handleNavClick = () => {
-    this.props.history.push("/biomass");
-  };
-
+  // Update state when a new coordinate is selected
   handleCoordChange = async (coord, area) => {
     getCropsByPoint(coord, this.state.crop).then((responseData) => {
       this.setState({
@@ -44,6 +76,7 @@ class BiomassMain extends Component {
     });
   };
 
+  // Update state when a new crop is selected
   handleCropChange = async (crop) => {
     getCropsByPoint(this.state.coord, crop).then((responseData) => {
       this.setState({
@@ -56,6 +89,7 @@ class BiomassMain extends Component {
     });
   };
 
+  // Fetch available crops
   updateCrops = async () => {
     getAtlasCrops().then((cropsList) => {
       let cropsData = {};
@@ -69,8 +103,10 @@ class BiomassMain extends Component {
     });
   };
 
+  // Load crops on mount
   componentDidMount() {
     this.updateCrops();
+    document.title = "SenecAtlas - Biomasa";
   }
 
   render() {
@@ -88,6 +124,7 @@ class BiomassMain extends Component {
             }}
             columns={7}
           >
+            {/* Sidebar: BiomassTabs component */}
             <Grid item xs={7} md={2}>
               <BiomassTabs
                 coord={this.state.coord}
@@ -100,6 +137,7 @@ class BiomassMain extends Component {
                 onCropChange={this.handleCropChange}
               />
             </Grid>
+            {/* Main Map: BiomassMap component */}
             <Grid item xs={7} md={5}>
               <BiomassMap
                 coord={this.state.coord}
@@ -110,21 +148,8 @@ class BiomassMain extends Component {
               />
             </Grid>
           </Grid>
-          <SpeedDial
-            ariaLabel="dialNav"
-            sx={{ position: "absolute", top: 16, right: 16 }}
-            icon={<GrassIcon />}
-            direction="down"
-          >
-            {constants.navActions.map((action) => (
-              <SpeedDialAction
-                key={action.name}
-                icon={<Link to={action.link}>{action.icon}</Link>}
-                tooltipTitle={action.name}
-                tooltipOpen
-              />
-            ))}
-          </SpeedDial>
+          {/* SpeedDial navigation */}
+          <SpeedDialWithStyles />
         </Box>
       </ThemeProvider>
     );

@@ -1,7 +1,10 @@
+// SolarMain.jsx
+
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 import { Box, Grid, ThemeProvider } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
@@ -12,6 +15,39 @@ import SolarTabs from "../components/solar/solarTabs";
 import SolarMap from "../components/solar/solarMap";
 import { getAllData } from "../services/solarDataAPI";
 
+// Styles for SpeedDial tooltips
+const useStyles = makeStyles({
+  staticTooltipLabel: {
+    whiteSpace: "nowrap",
+    maxWidth: "none",
+  },
+});
+
+// SpeedDial component for navigation between sections
+const SpeedDialWithStyles = () => {
+  const classes = useStyles();
+
+  return (
+    <SpeedDial
+      ariaLabel="dialNav"
+      sx={{ position: "absolute", top: 16, right: 16 }}
+      icon={<WbSunnyIcon />}
+      direction="down"
+    >
+      {constants.navActions.map((action) => (
+        <SpeedDialAction
+          key={action.name}
+          icon={<Link to={action.link}>{action.icon}</Link>}
+          tooltipTitle={action.name}
+          tooltipOpen
+          classes={{ staticTooltipLabel: classes.staticTooltipLabel }}
+        />
+      ))}
+    </SpeedDial>
+  );
+};
+
+// Main component for the Solar page
 class SolarMain extends Component {
   constructor(props) {
     super(props);
@@ -25,10 +61,11 @@ class SolarMain extends Component {
     };
   }
 
-  handleNavClick = () => {
-    this.props.history.push("/solar");
-  };
+  componentDidMount() {
+    document.title = "SenecAtlas - Solar";
+  }
 
+  // Handle change in selected coordinate
   handleCoordChange = (coord) => {
     getAllData(coord, this.state.year).then((responseData) => {
       this.setState({
@@ -39,16 +76,14 @@ class SolarMain extends Component {
     });
   };
 
+  // Handle change in selected year
   handleYearChange = (year) => {
-    this.setState({
-      year,
-    });
+    this.setState({ year });
   };
 
+  // Handle change in selected variable
   handleVariableChange = (variable) => {
-    this.setState({
-      variable,
-    });
+    this.setState({ variable });
   };
 
   render() {
@@ -66,6 +101,7 @@ class SolarMain extends Component {
             }}
             columns={7}
           >
+            {/* Sidebar: SolarTabs component */}
             <Grid item xs={7} md={2}>
               <SolarTabs
                 coord={this.state.coord}
@@ -78,6 +114,7 @@ class SolarMain extends Component {
                 onVariableChange={this.handleVariableChange}
               />
             </Grid>
+            {/* Main map: SolarMap component */}
             <Grid item xs={7} md={5}>
               <SolarMap
                 coord={this.state.coord}
@@ -87,21 +124,8 @@ class SolarMain extends Component {
               />
             </Grid>
           </Grid>
-          <SpeedDial
-            ariaLabel="dialNav"
-            sx={{ position: "absolute", top: 16, right: 16 }}
-            icon={<WbSunnyIcon />}
-            direction="down"
-          >
-            {constants.navActions.map((action) => (
-              <SpeedDialAction
-                key={action.name}
-                icon={<Link to={action.link}>{action.icon}</Link>}
-                tooltipTitle={action.name}
-                tooltipOpen
-              />
-            ))}
-          </SpeedDial>
+          {/* SpeedDial navigation */}
+          <SpeedDialWithStyles />
         </Box>
       </ThemeProvider>
     );

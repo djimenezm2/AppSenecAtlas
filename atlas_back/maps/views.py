@@ -123,10 +123,8 @@ class IndicatorsViewset(viewsets.ModelViewSet):
             file_path = serializer.validated_data["file_path"]
             indicator_id = serializer.validated_data["indicator_id"]
             try:
-                # confirmar contenido de file_path
                 command = f'python3 ./maps/scripts/indicator_adder_runner.py --raster_path "/home/proyecto/atlas/atlas_back/media/{file_path}" --indicator_id "{indicator_id}"'
                 print(command)
-                # command = f'python ./maps/scripts/test_script.py "{file_path}" "{indicator_id}"'
                 result = subprocess.run(
                     command,
                     shell=True,
@@ -184,10 +182,8 @@ class IndicatorsViewset(viewsets.ModelViewSet):
             weights = serializer.validated_data["weights"]
             relations = serializer.validated_data["relations"]
             try:
-                # Pasar parametros al script fuzzifier...
                 command = f'python3 ./maps/scripts/analysis_runner.py -n "{name}" -c "{cell_size}" -i "{selected_ids}" -r "{relations}" -w "{weights}" -k "{extent}"'
                 print(command)
-                #command = f'python ./maps/scripts/test_script.py "{name}" "{cell_size}" "{extent}" "{selected_ids}" "{weights}" "{relations}" "{indicator_id}"'
                 result = subprocess.run(
                     command,
                     shell=True,

@@ -63,17 +63,35 @@ class BiomassMain extends Component {
     };
   }
 
-  // Update state when a new coordinate is selected
+  // Update state when a new coordinate is selected (if not null)
   handleCoordChange = async (coord, area) => {
-    getCropsByPoint(coord, this.state.crop).then((responseData) => {
+    if (!coord) {
       this.setState({
-        coord: coord,
-        area,
-        codMun: responseData.municipio.id,
-        location: `${responseData.municipio.municipio}, ${responseData.municipio.departamento}`,
-        locationData: responseData.cultivos,
+        coord: [0, 0],
+        area: 0,
+        codMun: 0,
+        location: null,
+        locationData: null,
       });
-    });
+      return;
+    }
+
+    try {
+      const responseData = await getCropsByPoint(coord, this.state.crop);
+      if (responseData && responseData.municipio) {
+        this.setState({
+          coord,
+          area,
+          codMun: responseData.municipio.id,
+          location: `${responseData.municipio.municipio}, ${responseData.municipio.departamento}`,
+          locationData: responseData.cultivos,
+        });
+      } else {
+        console.error("No municipio data:", responseData);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   // Update state when a new crop is selected

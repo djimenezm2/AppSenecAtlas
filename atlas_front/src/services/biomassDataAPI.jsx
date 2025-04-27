@@ -13,7 +13,7 @@ const biomassDataClient = axios.create({
 export const getCropsByPoint = async (coord, cropId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/municipios/crops_by_point",
+      url: "/api/biomasa/municipios/crops_by_point/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -29,7 +29,7 @@ export const getCropsByPoint = async (coord, cropId) => {
 export const getAtlasCrops = async (id) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/cultivos",
+      url: "/api/biomasa/cultivos/",
       method: "get",
       params: {
         id,
@@ -44,7 +44,7 @@ export const getAtlasCrops = async (id) => {
 export const getTechnologies = async (id) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/tecnologias",
+      url: "/api/biomasa/tecnologias/",
       method: "get",
       params: {
         id,
@@ -59,7 +59,7 @@ export const getTechnologies = async (id) => {
 export const getResidues = async (id, cropId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/residuos",
+      url: "/api/biomasa/residuos/",
       method: "get",
       params: {
         id,
@@ -75,7 +75,7 @@ export const getResidues = async (id, cropId) => {
 export const getVariables = async (id, techId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/variables",
+      url: "/api/biomasa/variables/",
       method: "get",
       params: {
         id,
@@ -116,7 +116,7 @@ export const getCropRelatedData = async (area, cropId) => {
         },
       }),
       biomassDataClient.request({
-        url: "/api/biomasa/residuos",
+        url: "/api/biomasa/residuos/",
         method: "get",
         params: {
           cultivo: cropId,

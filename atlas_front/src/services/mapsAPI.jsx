@@ -13,7 +13,7 @@ const mapsClient = axios.create({
 export const getIndicators = async (id) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/indicators",
+      url: "/api/indicators/",
       method: "get",
       params: {
         id,
@@ -28,7 +28,7 @@ export const getIndicators = async (id) => {
 export const getMetadata = async (indicatorId) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/metadata",
+      url: "/api/metadata/",
       method: "get",
       params: {
         id: indicatorId,
@@ -43,7 +43,7 @@ export const getMetadata = async (indicatorId) => {
 export const getUnits = async (id) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/units",
+      url: "/api/units/",
       method: "get",
       params: {
         id,
@@ -90,7 +90,7 @@ export const getPixels = async (indicatorId, geometry) => {
 export const downloadLayer = async (indicatorId) => {
   await mapsClient
     .request({
-      url: "/api/indicators/download",
+      url: "/api/indicators/download/",
       method: "get",
       responseType: "blob",
       params: {

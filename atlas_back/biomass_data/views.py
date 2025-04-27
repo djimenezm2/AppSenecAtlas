@@ -41,18 +41,26 @@ class MunicipioViewset(viewsets.ModelViewSet):
 
         if point_request and cultivo_request:
             latitude, longitude = map(float, point_request.split(','))
-            municipio_queryset = queryset.filter(polygon__contains=Point(latitude, longitude))
+            point = Point(latitude, longitude)
+            municipio_instance = queryset.filter(polygon__contains=point).first()
 
-            if municipio_queryset:
-                municipio_instance = municipio_queryset.first()
-                cultivos_queryset = models.HistCultivo.objects.filter(municipio=municipio_instance)
-                cultivos_queryset = cultivos_queryset.filter(cultivo=cultivo_request).order_by('anio').values()
+            if municipio_instance:
+                cultivos_queryset = models.HistCultivo.objects.filter(
+                    municipio=municipio_instance,
+                    cultivo=cultivo_request
+                ).order_by('anio')
+
+                municipio_serializer = self.serializer_class(municipio_instance)
                 cultivos_serializer = serializers.HistCultivoSerializer(cultivos_queryset, many=True)
-                municipio_serializer = self.serializer_class(municipio_instance, many=False)
-                return Response({"municipio": municipio_serializer.data, "cultivos": cultivos_serializer.data})
+
+                return Response({
+                    "municipio": municipio_serializer.data,
+                    "cultivos": cultivos_serializer.data
+                })
+
             return Response({"error": "no data in point"}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response({"error": "cultivo and point is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"error": "cultivo and point is required."}, status=status.HTTP_400_BAD_REQUEST)
 
 class HistCultivoViewset(viewsets.ModelViewSet):
     """

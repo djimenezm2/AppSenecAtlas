@@ -1,4 +1,6 @@
+from django.conf import settings
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
+from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
@@ -52,21 +54,33 @@ class UnitsSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class IndicatorsSerializer(ModelSerializer):
-    """
-    Serializador para el modelo Indicators.
-
-    Este serializador convierte objetos Indicators en representaciones JSON.
-
-    Campos:
-        Todos los campos del modelo.
-
-    """
+class IndicatorsSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+    layer = serializers.SerializerMethodField()
 
     class Meta:
         model = Indicators
-        # If all fields: fields = '__all__'
         fields = "__all__"
+
+    def get_thumbnail(self, obj):
+        request = self.context.get('request')
+        if request:
+            if settings.DEBUG:
+                # Desarrollo: devolver URL absoluta
+                return request.build_absolute_uri(obj.thumbnail.url)
+            else:
+                # Producción: devolver ruta relativa
+                return obj.thumbnail.url
+        return obj.thumbnail.url
+
+    def get_layer(self, obj):
+        request = self.context.get('request')
+        if request and obj.layer:
+            if settings.DEBUG:
+                return request.build_absolute_uri(obj.layer.url)
+            else:
+                return obj.layer.url
+        return obj.layer.url if obj.layer else None
 
 
 class ProjectIndicatorSerializer(ModelSerializer):

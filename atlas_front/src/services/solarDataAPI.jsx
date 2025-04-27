@@ -13,7 +13,7 @@ const solarDataClient = axios.create({
 export const getYearlyData = async (coord, year) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/y/",
+      url: "/senecatlas/api/solar/y/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -29,7 +29,7 @@ export const getYearlyData = async (coord, year) => {
 export const getMonthlyData = async (coord, year) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/m/",
+      url: "/senecatlas/api/solar/m/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -45,7 +45,7 @@ export const getMonthlyData = async (coord, year) => {
 export const getHourlyData = async (coord, year) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/h/",
+      url: "/senecatlas/api/solar/h/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -61,7 +61,7 @@ export const getHourlyData = async (coord, year) => {
 export const getDailyData = async (coord, year) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/d/",
+      url: "/senecatlas/api/solar/d/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -77,7 +77,7 @@ export const getDailyData = async (coord, year) => {
 export const getElevationData = async (coord) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/elevation/",
+      url: "/senecatlas/api/solar/elevation/",
       method: "get",
       params: {
         point: coord,
@@ -92,7 +92,7 @@ export const getElevationData = async (coord) => {
 export const getLimitsData = async (year) => {
   try {
     const response = await solarDataClient.request({
-      url: "/api/solar/limits/",
+      url: "/senecatlas/api/solar/limits/",
       method: "get",
       params: {
         year,
@@ -108,7 +108,7 @@ export const getAllData = async (coord, year) => {
   try {
     const [dataYear, dataMonth] = await Promise.all([
       solarDataClient.request({
-        url: "/api/solar/y/",
+        url: "/senecatlas/api/solar/y/",
         method: "get",
         params: {
           point: `${coord[0]},${coord[1]}`,
@@ -116,7 +116,7 @@ export const getAllData = async (coord, year) => {
         },
       }),
       solarDataClient.request({
-        url: "/api/solar/m/",
+        url: "/senecatlas/api/solar/m/",
         method: "get",
         params: {
           point: `${coord[0]},${coord[1]}`,
@@ -134,7 +134,7 @@ export const getYearlyPixels = async (year, geometry) => {
   try {
     const [dataPixels, dataLimits] = await Promise.all([
       solarDataClient.request({
-        url: "/api/solar/pixels/draw/",
+        url: "/senecatlas/api/solar/pixels/draw/",
         method: "post",
         data: {
           year,
@@ -142,7 +142,7 @@ export const getYearlyPixels = async (year, geometry) => {
         },
       }),
       solarDataClient.request({
-        url: "/api/solar/limits/",
+        url: "/senecatlas/api/solar/limits/",
         method: "get",
         params: {
           year,

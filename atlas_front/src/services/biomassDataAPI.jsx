@@ -13,7 +13,7 @@ const biomassDataClient = axios.create({
 export const getCropsByPoint = async (coord, cropId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/municipios/crops_by_point/",
+      url: "/senecatlas/api/biomasa/municipios/crops_by_point/",
       method: "get",
       params: {
         point: `${coord[0]},${coord[1]}`,
@@ -29,7 +29,7 @@ export const getCropsByPoint = async (coord, cropId) => {
 export const getAtlasCrops = async (id) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/cultivos/",
+      url: "/senecatlas/api/biomasa/cultivos/",
       method: "get",
       params: {
         id,
@@ -44,7 +44,7 @@ export const getAtlasCrops = async (id) => {
 export const getTechnologies = async (id) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/tecnologias/",
+      url: "/senecatlas/api/biomasa/tecnologias/",
       method: "get",
       params: {
         id,
@@ -59,7 +59,7 @@ export const getTechnologies = async (id) => {
 export const getResidues = async (id, cropId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/residuos/",
+      url: "/senecatlas/api/biomasa/residuos/",
       method: "get",
       params: {
         id,
@@ -75,7 +75,7 @@ export const getResidues = async (id, cropId) => {
 export const getVariables = async (id, techId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/variables/",
+      url: "/senecatlas/api/biomasa/variables/",
       method: "get",
       params: {
         id,
@@ -91,7 +91,7 @@ export const getVariables = async (id, techId) => {
 export const predictProduction = async (area, cropId) => {
   try {
     const response = await biomassDataClient.request({
-      url: "/api/biomasa/inference/production/",
+      url: "/senecatlas/api/biomasa/inference/production/",
       method: "post",
       params: {
         area,
@@ -108,7 +108,7 @@ export const getCropRelatedData = async (area, cropId) => {
   try {
     const [predictionData, residuesData] = await Promise.all([
       biomassDataClient.request({
-        url: "/api/biomasa/inference/production/",
+        url: "/senecatlas/api/biomasa/inference/production/",
         method: "post",
         params: {
           area,
@@ -116,7 +116,7 @@ export const getCropRelatedData = async (area, cropId) => {
         },
       }),
       biomassDataClient.request({
-        url: "/api/biomasa/residuos/",
+        url: "/senecatlas/api/biomasa/residuos/",
         method: "get",
         params: {
           cultivo: cropId,

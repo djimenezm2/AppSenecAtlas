@@ -13,7 +13,7 @@ const mapsClient = axios.create({
 export const getIndicators = async (id) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/indicators/",
+      url: "/senecatlas/api/indicators/",
       method: "get",
       params: {
         id,
@@ -28,7 +28,7 @@ export const getIndicators = async (id) => {
 export const getMetadata = async (indicatorId) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/metadata/",
+      url: "/senecatlas/api/metadata/",
       method: "get",
       params: {
         id: indicatorId,
@@ -43,7 +43,7 @@ export const getMetadata = async (indicatorId) => {
 export const getUnits = async (id) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/units/",
+      url: "/senecatlas/api/units/",
       method: "get",
       params: {
         id,
@@ -58,7 +58,7 @@ export const getUnits = async (id) => {
 export const getOriginalPixels = async (indicatorId, geometry) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/originalpixels/draw/",
+      url: "/senecatlas/api/originalpixels/draw/",
       method: "post",
       data: {
         indicator_id: indicatorId,
@@ -74,7 +74,7 @@ export const getOriginalPixels = async (indicatorId, geometry) => {
 export const getPixels = async (indicatorId, geometry) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/pixels/draw/",
+      url: "/senecatlas/api/pixels/draw/",
       method: "post",
       data: {
         indicator_id: indicatorId,
@@ -90,7 +90,7 @@ export const getPixels = async (indicatorId, geometry) => {
 export const downloadLayer = async (indicatorId) => {
   await mapsClient
     .request({
-      url: "/api/indicators/download/",
+      url: "/senecatlas/api/indicators/download/",
       method: "get",
       responseType: "blob",
       params: {
@@ -122,7 +122,7 @@ export const uploadFile = async (
   try {
     const [dataFile, dataIndicator] = await Promise.all([
       mapsClient.request({
-        url: "/api/upload/",
+        url: "/senecatlas/api/upload/",
         method: "post",
         data: fileFormData,
         headers: {
@@ -136,7 +136,7 @@ export const uploadFile = async (
         },
       }),
       mapsClient.request({
-        url: "/api/indicators/",
+        url: "/senecatlas/api/indicators/",
         method: "post",
         data: indicatorFormData,
         headers: {
@@ -154,7 +154,7 @@ export const uploadFile = async (
 export const addIndicator = async (formData) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/indicators/",
+      url: "/senecatlas/api/indicators/",
       method: "post",
       data: formData,
       headers: {
@@ -171,7 +171,7 @@ export const addIndicator = async (formData) => {
 export const addLayers = async (formData) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/indicators/adder/",
+      url: "/senecatlas/api/indicators/adder/",
       method: "post",
       data: formData,
       headers: {
@@ -188,7 +188,7 @@ export const addLayers = async (formData) => {
 export const analyzeLayers = async (formData) => {
   try {
     const response = await mapsClient.request({
-      url: "/api/indicators/analyzer/",
+      url: "/senecatlas/api/indicators/analyzer/",
       method: "post",
       data: formData,
       headers: {

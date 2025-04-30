@@ -10,7 +10,7 @@ export const backendURL = "http://localhost:8081";
 // Desarrollo
 //export const backendURL = "http://localhost:8081";
 
-export const TEXTFIELD_REGEX = /^[a-zA-Z0-9]+$/;
+export const TEXTFIELD_REGEX = /^[a-zA-Z0-9_ ]+$/;
 
 export const mapsMetadata = {
   biomass: {

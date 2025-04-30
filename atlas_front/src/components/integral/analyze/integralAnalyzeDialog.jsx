@@ -16,7 +16,7 @@ import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import CustomSnackbar from "../../content/customSnackbar";
 import AnalyzeStepOne from "./integralAnalyzeStepOne";
 import AnalyzeStepTwo from "./integralAnalyzeStepTwo";
-import { analyzeLayers, addIndicator } from "../../../services/mapsAPI";
+import { analyzeLayers } from "../../../services/mapsAPI";
 import constants from "../../../utils/constants";
 import strings from "../../../strings/es.json";
 
@@ -114,64 +114,51 @@ class AnalyzeDialog extends Component {
       open: false,
       openProcessing: true,
     });
-    const indicatorFormData = new FormData();
 
-    indicatorFormData.append(
-      "name",
-      `${this.state.name} (${new Date().toLocaleString()})`
-    );
-    indicatorFormData.append("units", 1);
+  const formData = new FormData();
+  formData.append("name", this.state.name);
+  formData.append("cell_size", this.state.cellSize);
+  formData.append("extent", this.props.wktPolygon);
+  formData.append(
+    "selected_ids",
+    this.props.selectedIndicators.map((i) => i.id).toString()
+  );
+  formData.append(
+    "weights",
+    this.props.selectedIndicators.map((i) => i.weight).toString()
+  );
+  formData.append(
+    "relations",
+    this.props.selectedIndicators.map((i) => i.relation).toString()
+  );
 
-    await addIndicator(indicatorFormData)
-      .then((response) => {
-        const indicatorId = response.indicator_id;
-        const formData = new FormData();
-        formData.append("indicator_id", indicatorId);
-        formData.append("name", this.state.name);
-        formData.append("cell_size", this.state.cellSize);
-        formData.append("extent", this.props.wktPolygon);
-        formData.append(
-          "selected_ids",
-          this.props.selectedIndicators.map((i) => i.id).toString()
-        );
-        formData.append(
-          "weights",
-          this.props.selectedIndicators.map((i) => i.weight).toString()
-        );
-        formData.append(
-          "relations",
-          this.props.selectedIndicators.map((i) => i.relation).toString()
-        );
-        analyzeLayers(formData)
-          .then((response) => {
-            this.setState({
-              open: false,
-              openResult: true,
-              openProcessing: false,
-              success: "success",
-              resultMessage: `${response.message}`,
-            });
-          })
-          .then(() => this.props.onUploadSuccess())
-          .catch((error) =>
-            this.setState({
-              open: false,
-              openResult: true,
-              openProcessing: false,
-              success: "error",
-              resultMessage: `${strings.serverError}: ${error.message}`,
-            })
-          );
-      })
-      .catch((error) =>
-        this.setState({
-          open: false,
-          openResult: true,
-          openProcessing: false,
-          success: "error",
-          resultMessage: `${strings.serverError}: ${error.message}`,
-        })
-      );
+  await analyzeLayers(formData)
+    .then((response) => {
+      this.setState({
+        open: false,
+        openResult: true,
+        openProcessing: false,
+        success: "success",
+        resultMessage: `${response.message}`,
+      });
+    })
+    .then(() => this.props.onUploadSuccess())
+    .catch((error) => {
+      const message =
+        typeof error === "string"
+          ? error
+          : typeof error.message === "string"
+            ? error.message
+            : JSON.stringify(error.message || error);
+
+      this.setState({
+        open: false,
+        openResult: true,
+        openProcessing: false,
+        success: "error",
+        resultMessage: `${strings.serverError}: ${message}`,
+      });
+    });
   };
 
   render() {

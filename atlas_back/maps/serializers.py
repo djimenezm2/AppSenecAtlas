@@ -201,7 +201,7 @@ class AnalyzeSerializer(Serializer):
 
     """
 
-    indicator_id = IntegerField()
+    #indicator_id = IntegerField() # Ya no es necesario, se obtiene automáticamente en el backend
     name = CharField()
     cell_size = IntegerField()
     extent = CharField()

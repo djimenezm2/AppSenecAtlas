@@ -9,6 +9,8 @@ from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
 from django.contrib.gis import gdal
+from maps.scripts.grid_guard import validate_cells
+from datetime import datetime
 
 import magic
 import subprocess
@@ -20,7 +22,6 @@ from django.contrib.gis.geos import GEOSGeometry
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from . import models
 
 
 class IndicatorsViewset(viewsets.ModelViewSet):
@@ -28,7 +29,7 @@ class IndicatorsViewset(viewsets.ModelViewSet):
     Conjunto de vistas para el modelo Indicators.
 
     Permite realizar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) en los indicadores.
-    Actualmente solo implementa Crear (POST) y Leer (GET).
+    Actualmente solo implementa Crear (POST), Leer (GET) y Eliminar (DELETE).
 
     """
 
@@ -75,6 +76,28 @@ class IndicatorsViewset(viewsets.ModelViewSet):
             return Response(
                 {"message": "Datos no válidos."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def destroy(self, request, pk=None):
+        try:
+            indicator = models.Indicators.objects.get(pk=pk)
+            models.Pixels.objects.filter(indicator=indicator).delete()
+            models.OriginalPixels.objects.filter(indicator=indicator).delete()
+            models.Metadata.objects.filter(indicator=indicator).delete()
+            models.ProjectIndicator.objects.filter(indicator=indicator).delete()
+
+            if indicator.layer:
+                try:
+                    indicator.layer.delete(save=False)
+                except Exception as e:
+                    print(f"Error borrando archivo de capa: {e}")
+            indicator.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        except models.Indicators.DoesNotExist:
+            return Response(
+                {"detail": "No Indicators matches the given query."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
     @action(detail=False, methods=["get"])
@@ -174,15 +197,54 @@ class IndicatorsViewset(viewsets.ModelViewSet):
         """
         serializer = serializers.AnalyzeSerializer(data=request.data)
         if serializer.is_valid():
-            indicator_id = serializer.validated_data["indicator_id"]
+            # Format name with an id if it already exists
             name = serializer.validated_data["name"]
+            name = name.strip()
+
+            max_length = 29
+            if len(name) > max_length:
+                name = name[:max_length]
+
+            final_name = name
+            contador = 1
+
+            while models.Indicators.objects.filter(name=final_name).exists():
+                sufijo = f" ({contador})"
+                recorte = max_length - len(sufijo)
+                final_name = f"{name[:recorte]}{sufijo}"
+                contador += 1
+
+            new_indicator = models.Indicators.objects.create(
+                name=final_name,
+                units_id=1
+            )
+
+            # Create the new indicator and save it to the database
+            indicator_id = new_indicator.id
             cell_size = serializer.validated_data["cell_size"]
             extent = serializer.validated_data["extent"]
             selected_ids = serializer.validated_data["selected_ids"]
             weights = serializer.validated_data["weights"]
             relations = serializer.validated_data["relations"]
+
+            # Validate if the proposed analysis is too large, if so, block it
+            num_capas = len([i for i in selected_ids.split(",") if i.strip().isdigit()])
+            block, info = validate_cells(extent, cell_size, num_capas)
+
+            if block:
+                new_indicator.delete()
+                return Response({
+                    "status": "error",
+                    "code": "grid_too_large",
+                    "message": (
+                        f"El análisis fue bloqueado porque generaría {info['total_operaciones']:,} operaciones, "
+                        f"excediendo el límite de {info['limite']:,}. "
+                        "Por favor reduce el área o aumenta el tamaño de celda."
+                    )
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             try:
-                command = f'python3 ./maps/scripts/analysis_runner.py -n "{name}" -c "{cell_size}" -i "{selected_ids}" -r "{relations}" -w "{weights}" -k "{extent}"'
+                command = f'python3 ./maps/scripts/analysis_runner.py -n "{final_name}" -c "{cell_size}" -i "{selected_ids}" -r "{relations}" -w "{weights}" -k "{extent}"'
                 print(command)
                 result = subprocess.run(
                     command,
@@ -196,9 +258,11 @@ class IndicatorsViewset(viewsets.ModelViewSet):
                         {
                             "status": "success",
                             "message": "Análisis completado correctamente",
+                            "indicator_id": indicator_id
                         }
                     )
                 else:
+                    self.destroy(request, pk=indicator_id)
                     return Response(
                         {
                             "status": "error",
@@ -207,6 +271,7 @@ class IndicatorsViewset(viewsets.ModelViewSet):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
             except Exception as e:
+                self.destroy(request, pk=indicator_id)
                 return Response(
                     {
                         "status": "error",

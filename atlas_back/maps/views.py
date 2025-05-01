@@ -81,10 +81,16 @@ class IndicatorsViewset(viewsets.ModelViewSet):
     def destroy(self, request, pk=None):
         try:
             indicator = models.Indicators.objects.get(pk=pk)
-            models.Pixels.objects.filter(indicator=indicator).delete()
-            models.OriginalPixels.objects.filter(indicator=indicator).delete()
-            models.Metadata.objects.filter(indicator=indicator).delete()
-            models.ProjectIndicator.objects.filter(indicator=indicator).delete()
+            # Verify if indicator is in original pixels
+            if models.OriginalPixels.objects.filter(indicator=indicator).exists():
+                return Response(
+                    {"detail": "No se puede eliminar un indicador base."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                models.Pixels.objects.filter(indicator=indicator).delete()
+                models.Metadata.objects.filter(indicator=indicator).delete()
+                models.ProjectIndicator.objects.filter(indicator=indicator).delete()
 
             if indicator.layer:
                 try:

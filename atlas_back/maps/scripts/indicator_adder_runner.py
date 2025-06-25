@@ -36,7 +36,9 @@ QgsApplication.processingRegistry().addProvider(provider)
 
 # Run integral model...
 input_layer = QgsRasterLayer(config["raster_path"], "layer", "gdal")
-study_area  = QgsVectorLayer("/home/proyecto/atlas/atlas_back/media/uploads/oilpalm_cells.gpkg|layername=municipalities", "layer", "ogr")
+study_area = QgsVectorLayer("./media/gpkg/municipios.gpkg|layername=municipalities", "layer", "ogr")
+print("Input layer is valid?:", input_layer.isValid())
+
 params = {
     "input_layer": input_layer,
     "indicator_id": config["indicator_id"],

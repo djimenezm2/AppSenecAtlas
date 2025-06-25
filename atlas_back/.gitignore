@@ -18,7 +18,7 @@ env/
 local_settings.py
 
 # Media and static files (upload folder, compiled assets, etc.)
-#media/
+media/
 #staticfiles/
 #uploads/
 #docs/

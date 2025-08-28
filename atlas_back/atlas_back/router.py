@@ -29,11 +29,11 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 # Integral
 router.register("originalpixels", OriginalPixelsViewset)
-router.register("pixels", PixelsViewset)
-router.register("indicators", IndicatorsViewset)
-router.register("metadata", MetadataViewset)
-router.register("units", UnitsViewset)
-router.register("upload", FileUploadViewSet, basename="file-upload")
+#router.register("pixels", PixelsViewset)
+#router.register("indicators", IndicatorsViewset)
+#router.register("metadata", MetadataViewset)
+#router.register("units", UnitsViewset)
+#router.register("upload", FileUploadViewSet, basename="file-upload")
 # Biomasa
 router.register("biomasa/municipios", MunicipioViewset)
 router.register("biomasa/cultivos/hist", HistCultivoViewset)

@@ -5,7 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import Index from "./pages/index";
 import SolarMain from "./pages/solarMain";
 import BiomassMain from "./pages/biomassMain";
-import IntegralMain from "./pages/integralMain";
+//import IntegralMain from "./pages/integralMain";
 
 // Main component that defines the application routes
 export default function App() {
@@ -22,7 +22,7 @@ export default function App() {
       <Route path="/senecatlas/solar" element={<SolarMain />} />
 
       {/* Integral page */}
-      <Route path="/senecatlas/integral" element={<IntegralMain />} />
+      {/*<Route path="/senecatlas/integral" element={<IntegralMain />} />*/}
     </Routes>
   );
 }

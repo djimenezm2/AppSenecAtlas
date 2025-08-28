@@ -6,7 +6,7 @@ import FeatureCard from "./FeatureCard";
 
 import GrassIcon from "@mui/icons-material/Grass";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
-import LayersIcon from "@mui/icons-material/Layers";
+//import LayersIcon from "@mui/icons-material/Layers";
 
 import strings from "../../strings/es.json";
 
@@ -26,19 +26,24 @@ const features = [
     icon: <WbSunnyIcon fontSize="large" />,
     link: "/senecatlas/solar",
   },
-  {
+  /*{
     title: strings.integral,
     description: strings.integralDescription,
     button: strings.integralButton,
     icon: <LayersIcon fontSize="large" />,
     link: "/senecatlas/integral",
   },
+  */
 ];
 
 // Grid that displays all feature cards
 const FeatureGrid = () => {
   return (
-    <Grid container spacing={6}>
+    <Grid
+      container spacing={6}
+      justifyContent="center"
+      alignItems="center"
+    >
       {features.map((feature) => (
         <Grid item xs={12} sm={6} md={4} key={feature.title}>
           <FeatureCard {...feature} />

@@ -1,6 +1,6 @@
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import GrassIcon from "@mui/icons-material/Grass";
-import LayersIcon from "@mui/icons-material/Layers";
+//import LayersIcon from "@mui/icons-material/Layers";
 import strings from "../strings/es.json";
 
 // Produccion
@@ -77,11 +77,11 @@ export const navActions = [
     name: strings.solarAtlas,
     link: "/senecatlas/solar"
   },
-  {
+  /*{
     icon: <LayersIcon sx={{ position: 'relative', top: '4px' }} />,
     name: strings.integral,
     link: "/senecatlas/integral"
-  },
+  },*/
 ];
 
 

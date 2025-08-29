@@ -14,10 +14,11 @@ python-decouple = "*"
 python-magic = "*"
 pillow = "*"
 joblib = "*"
-scikit-learn = "*"
+scikit-learn == 1.2.2
 docutils = "*"
 gunicorn = "*"
 uvicorn = "*"
+typing-extensions = "*"
 
 [dev-packages]
 sphinx = "*"

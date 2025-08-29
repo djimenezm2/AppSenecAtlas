@@ -4,8 +4,7 @@ import GrassIcon from "@mui/icons-material/Grass";
 import strings from "../strings/es.json";
 
 // Produccion
-//export const backendURL = "https://senecatlasback.virtual.uniandes.edu.co";
-export const backendURL = "http://localhost:8081";
+export const backendURL = "https://fabspacecol.uniandes.edu.co";
 
 // Desarrollo
 //export const backendURL = "http://localhost:8081";

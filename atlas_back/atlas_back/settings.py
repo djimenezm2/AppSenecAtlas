@@ -27,27 +27,28 @@ SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
-    'localhost',
-    'senecatlasback.virtual.uniandes.edu.co',
-    'senecatlas.virtual.uniandes.edu.co',
+    'fabspacecol.uniandes.edu.co',
+    'fabspace-server.uniandes.edu.co',
+    '157.253.242.8',
     '127.0.0.1',
-    '172.24.98.40',
+    'localhost',
 ]
 
 # Allow requests from the front end
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8090",
-    'https://127.0.0.1:8081',
-    "https://senecatlas.virtual.uniandes.edu.co",
+    'http://127.0.0.1:8081',
+    "https://fabspacecol.uniandes.edu.co",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8090',
     'https://*.127.0.0.1',
     'https://127.0.0.1:8081',
-    "https://senecatlas.virtual.uniandes.edu.co",
+    'http://localhost:8081',
+    'https://fabspacecol.uniandes.edu.co',
+    'https://fabspace-server.uniandes.edu.co',
 ]
-
 
 # Application definition
 
@@ -98,6 +99,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'atlas_back.wsgi.application'
+ASGI_APPLICATION = "atlas_back.asgi.application"
 
 
 # Database

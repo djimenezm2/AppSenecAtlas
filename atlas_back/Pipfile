@@ -17,6 +17,7 @@ joblib = "*"
 scikit-learn = "*"
 docutils = "*"
 gunicorn = "*"
+uvicorn = "*"
 
 [dev-packages]
 sphinx = "*"

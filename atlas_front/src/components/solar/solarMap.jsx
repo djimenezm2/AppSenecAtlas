@@ -28,6 +28,7 @@ class SolarMap extends Component {
     this.canvasRenderer = null;
     this.geojsonLayer = null;
     this._moveTimeout = null;
+    this.selectedMarker = null;
   }
 
   // Returns a padded polygon around map bounds
@@ -122,6 +123,19 @@ class SolarMap extends Component {
           fillColor: '#ffffff',
         }).on('click', () => {
           this.props.onCoordChange([latlng.lng, latlng.lat]);
+
+          // Close existing popup and remove previous marker
+          this.map.closePopup();
+          if (this.selectedMarker) {
+            this.map.removeLayer(this.selectedMarker);
+            this.selectedMarker = null;
+          }
+
+          // Add new marker at clicked location
+          this.selectedMarker = L.marker(latlng).addTo(this.map);
+          this.selectedMarker
+            .bindPopup(`(${latlng.lat.toFixed(2)}, ${latlng.lng.toFixed(2)})`)
+            .openPopup();
         });
       },
     }).addTo(this.map);
